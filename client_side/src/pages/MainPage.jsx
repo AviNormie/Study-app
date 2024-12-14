@@ -8,27 +8,27 @@ function MainPage() {
   const navigate = useNavigate();
   const [socketId, setSocketId] = useState(null);
 
-  // useEffect(() => {
-  //   if (!socket) {
-  //     socket = io('http://localhost:3000'); // Connect to the Socket.IO server
+  useEffect(() => {
+    if (!socket) {
+      socket = io('http://localhost:3000'); // Connect to the Socket.IO server
 
-  //     socket.on('connect', () => {
-  //       console.log('Socket connected: ', socket.id);
-  //       setSocketId(socket.id); // Store socket ID
-  //     });
+      socket.on('connect', () => {
+        console.log('Socket connected: ', socket.id);
+        setSocketId(socket.id); // Store socket ID
+      });
 
-  //     socket.on('message', (data) => {
-  //       console.log(data);
-  //     });
-  //   }
+      socket.on('message', (data) => {
+        console.log(data);
+      });
+    }
 
-  //   return () => {
-  //     if (socket) {
-  //       socket.disconnect();
-  //       socket = null; // Reset socket to null after disconnect
-  //     }
-  //   };
-  // }, [navigate]);
+    return () => {
+      if (socket) {
+        socket.disconnect();
+        socket = null; // Reset socket to null after disconnect
+      }
+    };
+  }, [navigate]);
 
   return (
     <div>

@@ -1,3 +1,4 @@
+const UserModel = require('./models/User')
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -14,7 +15,13 @@ const io = socketIo(server, {
     }
 });
 
-mongoose.connect(`mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongodb.net/study-app`)
+mongoose.connect('mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongodb.net/study-app', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log("MongoDB connected successfully"))
+.catch(err => console.error("MongoDB connection error:", err));
+
 // Enable CORS for all routes
 app.use(cors());
 
@@ -43,34 +50,66 @@ io.on('connection', (socket) => {
 });
 
 // API Routes
-// app.use('/api/timer', timerRoutes);
-// app.use('/api/leaderboard', leaderboardRoutes);
-app.post('/login',(req, res) => {
-    try{
-        const {email,password} = req.body
-        UserModel.findOne({email:email})
-        .then(users => {
-            if(users){
-                if(users.password === password){
-                    res.json({message: "success"})
-                    }else{
-                    res.json({message: "Incorrect password"})
-                }
-            }else{
-                res.json({msg: 'User not found'})
-            }
-        }) 
-    } catch(err) {
-        res.json({err})
+app.get('/users', async (req, res) => {
+    try {
+        const users = await UserModel.find({}, 'name studyTime'); // Only fetch username and studyTime
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch users' });
     }
-    
-})
+});
 
-app.post('/sign-up',(req, res) => {
-    UserModel.create(req.body)
-    .then(users => res.json(users))
-    .catch(err => res.json({err}))
-})
+app.post('/update-study-time', async (req, res) => {
+    const { userId, studyTime } = req.body; // Get user ID and new study time
+    try {
+        await UserModel.findByIdAndUpdate(userId, { $inc: { studyTime } }); // Increment studyTime
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update study time' });
+    }
+});
+
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (user.password !== password) {
+            return res.status(401).json({ message: "Incorrect password" });
+        }
+        res.json({ message: "success", userId: user._id });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+app.post('/sign-up', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+        const existingUser = await UserModel.findOne({ email });
+        if (existingUser) {
+            return res.status(409).json({ message: "Email already exists" });
+        }
+        const newUser = await UserModel.create({ name, email, password });
+        res.status(201).json({ message: "User created successfully", user: newUser });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

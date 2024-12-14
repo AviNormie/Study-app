@@ -16,7 +16,7 @@ function Login() {
       .then(result => {
         console.log('Login successful', result);
         // Redirect to the main page after successful login
-        navigate('/main');
+        navigate('/timer');
 
         // Establish Socket.IO connection after login
       //   const socket = io('http://localhost:3000');
