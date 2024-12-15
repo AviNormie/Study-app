@@ -36,32 +36,44 @@ const Timer = () => {
 
   useEffect(() => {
     let timer;
+    let updateTimer;
 
     if (isRunning) {
       timer = setInterval(() => {
         setTimeElapsed((prev) => prev + 1);
       }, 1000);
+
+      // Emit every 10 seconds to update the study time in the backend
+      updateTimer = setInterval(() => {
+        if (socketId) {
+          socket.emit('updateStudyTime', { userId: 'user._id', studyTime: timeElapsed });
+        }
+      }, 10000);
     } else {
       clearInterval(timer);
+      clearInterval(updateTimer);
     }
 
-    return () => clearInterval(timer); // Cleanup interval on unmount
-  }, [isRunning]);
+    return () => {
+      clearInterval(timer); // Cleanup interval on unmount
+      clearInterval(updateTimer);
+    };
+  }, [isRunning, timeElapsed, socketId]);
 
   const handleStartPause = () => {
     setIsRunning(!isRunning); // Toggle the running state
 
     if (!isRunning) {
-      socket?.emit('startTimer', { userId: 'user._id', timeElapsed }); // Notify server when timer starts
+      socket?.emit('startTimer', { userId: '675d44215ac843fc3ebc8af4', timeElapsed }); // Notify server when timer starts
     } else {
-      socket?.emit('pauseTimer', { userId: 'user._id', timeElapsed }); // Notify server when timer pauses
+      socket?.emit('pauseTimer', { userId: '675d44215ac843fc3ebc8af4', timeElapsed }); // Notify server when timer pauses
     }
   };
 
   const handleReset = () => {
     setIsRunning(false); // Stop the timer
     setTimeElapsed(0); // Reset the timer to 0
-    socket?.emit('resetTimer', { userId: 'user1' }); // Notify server about reset
+    socket?.emit('resetTimer', { userId: '675d44215ac843fc3ebc8af4' }); // Notify server about reset
   };
 
   useEffect(() => {
@@ -106,7 +118,7 @@ const Timer = () => {
               <li key={user._id} className="flex justify-between bg-white p-2 rounded shadow">
                 <span className="font-medium">{user.name}</span>
                 <span className="font-medium">{user._id}</span> 
-                <span>{user.studyTime} mins</span>
+                <span>{Math.floor(user.studyTime / 60)}:{user.studyTime % 60 < 10 ? `0${user.studyTime% 60}` : user.studyTime % 60}</span>
               </li>
             ))}
           </ul>
