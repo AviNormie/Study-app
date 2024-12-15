@@ -15,11 +15,7 @@ const io = socketIo(server, {
 });
 
 // MongoDB connection
-mongoose
-  .connect('mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongodb.net/study-app', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+mongoose.connect('mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongodb.net/study-app')
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -31,6 +27,7 @@ app.use(express.json());
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Start the timer
   socket.on('startTimer', async (data) => {
     console.log(`${data.userId} started timer: ${data.timeElapsed}s`);
     const user = await UserModel.findById(data.userId);
@@ -41,6 +38,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Pause the timer
   socket.on('pauseTimer', async (data) => {
     console.log(`${data.userId} paused timer: ${data.timeElapsed}s`);
     const user = await UserModel.findById(data.userId);
@@ -51,6 +49,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Reset the timer
   socket.on('resetTimer', async (data) => {
     console.log(`${data.userId} reset timer`);
     const user = await UserModel.findById(data.userId);
@@ -61,9 +60,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+  // Sync study time for all users every second
+  const updateAllTimers = async () => {
+    const users = await UserModel.find(); // Get all users
+    users.forEach((user) => {
+      io.emit('studyTimeUpdate', { userId: user._id, studyTime: user.studyTime });
+    });
+  };
+
+  // Emit the updated study times every second
+  const timerInterval = setInterval(updateAllTimers, 1000);
+
+  // Disconnect logic
+  socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
+    clearInterval(timerInterval);
+    
+    if (socket.userId) {
+      const user = await UserModel.findById(socket.userId);
+      if (user) {
+        user.studyTime = socket.studyTime; // Save the last study time
+        await user.save();
+      }
+    }
   });
+  
 });
 
 // API routes

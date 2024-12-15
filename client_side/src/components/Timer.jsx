@@ -38,29 +38,26 @@ const Timer = () => {
 
   useEffect(() => {
     let timer;
-    let updateTimer;
-
     if (isRunning) {
+      // Timer to increment time every second
       timer = setInterval(() => {
-        setTimeElapsed((prev) => prev + 1);
-      }, 1000);
-
-      // Emit every 10 seconds to update the study time in the backend
-      updateTimer = setInterval(() => {
-        if (socketId) {
-          socket.emit('studyTimeUpdate', { userId: '675d4bc1361ba17d74ddab0d', studyTime: timeElapsed });
-        }
-      }, 10000);
+        setTimeElapsed((prev) => {
+          const newTime = prev + 1;
+          // Emit only when the time changes
+          if (socketId) {
+            socket.emit('studyTimeUpdate', { userId: '675d4bc1361ba17d74ddab0d', studyTime: newTime });
+          }
+          return newTime;
+        });
+      }, 1000); // Emit every second
     } else {
       clearInterval(timer);
-      clearInterval(updateTimer);
     }
 
     return () => {
       clearInterval(timer); // Cleanup interval on unmount
-      clearInterval(updateTimer);
     };
-  }, [isRunning, timeElapsed, socketId]);
+  }, [isRunning, socketId]); // Depend only on isRunning and socketId
 
   const handleStartPause = () => {
     setIsRunning(!isRunning); // Toggle the running state
@@ -75,7 +72,7 @@ const Timer = () => {
   const handleReset = () => {
     setIsRunning(false); // Stop the timer
     setTimeElapsed(0); // Reset the timer to 0
-    socket?.emit('resetTimer', { userId: '675d44215ac843fc3ebc8af4' }); // Notify server about reset
+    socket?.emit('resetTimer', { userId: '675d4bc1361ba17d74ddab0d' }); // Notify server about reset
   };
 
   useEffect(() => {
@@ -119,7 +116,7 @@ const Timer = () => {
         {loading ? (
          <div className="flex justify-center items-center">
          <PuffLoader color="#3498db" size={60} />
-       </div>// Show loader when fetching users
+       </div> // Show loader when fetching users
         ) : users.length > 0 ? (
           <ul className="space-y-2">
             {users.map((user) => (
