@@ -52,9 +52,9 @@ const Timer = () => {
     setIsRunning(!isRunning); // Toggle the running state
 
     if (!isRunning) {
-      socket?.emit('startTimer', { userId: 'user1', timeElapsed }); // Notify server when timer starts
+      socket?.emit('startTimer', { userId: 'user._id', timeElapsed }); // Notify server when timer starts
     } else {
-      socket?.emit('pauseTimer', { userId: 'user1', timeElapsed }); // Notify server when timer pauses
+      socket?.emit('pauseTimer', { userId: 'user._id', timeElapsed }); // Notify server when timer pauses
     }
   };
 
@@ -105,6 +105,7 @@ const Timer = () => {
             {users.map((user) => (
               <li key={user._id} className="flex justify-between bg-white p-2 rounded shadow">
                 <span className="font-medium">{user.name}</span>
+                <span className="font-medium">{user._id}</span> 
                 <span>{user.studyTime} mins</span>
               </li>
             ))}
