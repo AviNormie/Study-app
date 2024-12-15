@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { PuffLoader } from "react-spinners";
 
 let socket; // Declare with let for reassignment
 
 const Timer = () => {
+  const [loading, setLoading] = useState(true); // Loader state
   const [socketId, setSocketId] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0); // Timer starts at 0 seconds
   const [isRunning, setIsRunning] = useState(false); // Tracks whether the timer is running
@@ -46,7 +48,7 @@ const Timer = () => {
       // Emit every 10 seconds to update the study time in the backend
       updateTimer = setInterval(() => {
         if (socketId) {
-          socket.emit('updateStudyTime', { userId: 'user._id', studyTime: timeElapsed });
+          socket.emit('studyTimeUpdate', { userId: '675d4bc1361ba17d74ddab0d', studyTime: timeElapsed });
         }
       }, 10000);
     } else {
@@ -64,9 +66,9 @@ const Timer = () => {
     setIsRunning(!isRunning); // Toggle the running state
 
     if (!isRunning) {
-      socket?.emit('startTimer', { userId: '675d44215ac843fc3ebc8af4', timeElapsed }); // Notify server when timer starts
+      socket?.emit('startTimer', { userId: '675d4bc1361ba17d74ddab0d', timeElapsed }); // Notify server when timer starts
     } else {
-      socket?.emit('pauseTimer', { userId: '675d44215ac843fc3ebc8af4', timeElapsed }); // Notify server when timer pauses
+      socket?.emit('pauseTimer', { userId: '675d4bc1361ba17d74ddab0d', timeElapsed }); // Notify server when timer pauses
     }
   };
 
@@ -84,6 +86,8 @@ const Timer = () => {
         setUsers(response.data);
       } catch (error) {
         console.error('Error fetching users:', error);
+      } finally {
+        setLoading(false); // Hide loader
       }
     };
 
@@ -112,18 +116,25 @@ const Timer = () => {
       </div>
       <div className="w-full max-w-lg bg-gray-100 p-4 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Users' Study Times</h2>
-        {users.length > 0 ? (
+        {loading ? (
+         <div className="flex justify-center items-center">
+         <PuffLoader color="#3498db" size={60} />
+       </div>// Show loader when fetching users
+        ) : users.length > 0 ? (
           <ul className="space-y-2">
             {users.map((user) => (
               <li key={user._id} className="flex justify-between bg-white p-2 rounded shadow">
                 <span className="font-medium">{user.name}</span>
-                <span className="font-medium">{user._id}</span> 
-                <span>{Math.floor(user.studyTime / 60)}:{user.studyTime % 60 < 10 ? `0${user.studyTime% 60}` : user.studyTime % 60}</span>
+                <span className="font-medium">{user._id}</span>
+                <span>
+                  {Math.floor(user.studyTime / 60)}:
+                  {user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
+                </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p>No users found.</p>
+          <p>No users found.</p> // Show this if no users are present
         )}
       </div>
     </div>
