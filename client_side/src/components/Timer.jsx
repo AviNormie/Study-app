@@ -11,6 +11,7 @@ const Timer = () => {
   const [timeElapsed, setTimeElapsed] = useState(0); // Timer starts at 0 seconds
   const [isRunning, setIsRunning] = useState(false); // Tracks whether the timer is running
   const [users, setUsers] = useState([]); // List of users with their study times
+  const [studyTime, setStudyTime] = useState(0); // Track studyTime for display
 
   useEffect(() => {
     // Ensure socket is only initialized once
@@ -21,6 +22,13 @@ const Timer = () => {
         console.log('Socket connected: ', socket.id);
         setSocketId(socket.id); // Store socket ID
       });
+          // Listen for 'studyTimeUpdate' event from the backend
+          socket.on('studyTimeUpdate', (data) => {
+            // console.log('Received update:', data);
+            if (data.userId === '675d4bc1361ba17d74ddab0d') {
+              setStudyTime(data.studyTime);
+            }
+          });
 
       socket.on('message', (data) => {
         console.log(data);
@@ -124,8 +132,8 @@ const Timer = () => {
                 <span className="font-medium">{user.name}</span>
                 <span className="font-medium">{user._id}</span>
                 <span>
-                  {Math.floor(user.studyTime / 60)}:
-                  {user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
+                {Math.floor(studyTime / 60)}:
+                {studyTime % 60 < 10 ? `0${studyTime % 60}` : studyTime % 60}
                 </span>
               </li>
             ))}

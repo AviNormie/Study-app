@@ -23,6 +23,9 @@ mongoose.connect('mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongo
 app.use(cors());
 app.use(express.json());
 
+let timerInterval = null; // Global interval for updating timers
+let activeTimers = {}; // To keep track of active timers
+
 // Socket.IO events
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -30,6 +33,15 @@ io.on('connection', (socket) => {
   // Start the timer
   socket.on('startTimer', async (data) => {
     console.log(`${data.userId} started timer: ${data.timeElapsed}s`);
+
+    // Mark the timer as active for this user
+    activeTimers[data.userId] = true;
+
+    // Start the interval if not already running
+    if (!timerInterval) {
+      timerInterval = setInterval(updateAllTimers, 10000);
+    }
+
     const user = await UserModel.findById(data.userId);
     if (user) {
       user.studyTime = data.timeElapsed;
@@ -41,6 +53,16 @@ io.on('connection', (socket) => {
   // Pause the timer
   socket.on('pauseTimer', async (data) => {
     console.log(`${data.userId} paused timer: ${data.timeElapsed}s`);
+
+    // Mark the timer as inactive for this user
+    delete activeTimers[data.userId];
+
+    // Stop the interval if no active timers remain
+    if (Object.keys(activeTimers).length === 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
     const user = await UserModel.findById(data.userId);
     if (user) {
       user.studyTime = data.timeElapsed;
@@ -52,6 +74,10 @@ io.on('connection', (socket) => {
   // Reset the timer
   socket.on('resetTimer', async (data) => {
     console.log(`${data.userId} reset timer`);
+
+    // Mark the timer as inactive
+    delete activeTimers[data.userId];
+
     const user = await UserModel.findById(data.userId);
     if (user) {
       user.studyTime = 0;
@@ -60,31 +86,42 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Sync study time for all users every second
+  // Function to sync study time for all users every 2 seconds
   const updateAllTimers = async () => {
-    const users = await UserModel.find(); // Get all users
-    users.forEach((user) => {
-      io.emit('studyTimeUpdate', { userId: user._id, studyTime: user.studyTime });
-    });
-  };
+    // Increment time only for users with active timers
+    const activeUserIds = Object.keys(activeTimers);
+    for (const userId of activeUserIds) {
+      const user = await UserModel.findById(userId);
+      if (user) {
+        user.studyTime += 10; // Increment time by 2 seconds
+        await user.save();
+        io.emit('studyTimeUpdate', { userId: user._id, studyTime: user.studyTime });
+      }
+    }
 
-  // Emit the updated study times every second
-  const timerInterval = setInterval(updateAllTimers, 1000);
+    // If no active timers remain, clear the interval
+    if (activeUserIds.length === 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  };
 
   // Disconnect logic
   socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
-    clearInterval(timerInterval);
-    
-    if (socket.userId) {
-      const user = await UserModel.findById(socket.userId);
-      if (user) {
-        user.studyTime = socket.studyTime; // Save the last study time
-        await user.save();
+
+    // Remove the user from activeTimers
+    for (const userId in activeTimers) {
+      if (activeTimers[userId] === socket.id) {
+        delete activeTimers[userId];
       }
     }
+
+    if (Object.keys(activeTimers).length === 0 && timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
   });
-  
 });
 
 // API routes
@@ -114,7 +151,7 @@ app.post('/login', async (req, res) => {
 
 app.get('/users', async (req, res) => {
   try {
-    const users = await UserModel.find({}, 'name studyTime'); // Only fetch username and studyTime
+    const users = await UserModel.find({}, 'name studyTime');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users' });
