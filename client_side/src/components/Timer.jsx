@@ -12,6 +12,8 @@ const Timer = () => {
   const [isRunning, setIsRunning] = useState(false); // Tracks whether the timer is running
   const [users, setUsers] = useState([]); // List of users with their study times
   const [studyTime, setStudyTime] = useState(0); // Track studyTime for display
+  const [userId, setUserId] = useState(localStorage.getItem('userId'));
+
 
   useEffect(() => {
     // Ensure socket is only initialized once
@@ -25,7 +27,7 @@ const Timer = () => {
           // Listen for 'studyTimeUpdate' event from the backend
           socket.on('studyTimeUpdate', (data) => {
             // console.log('Received update:', data);
-            if (data.userId === '675d4bc1361ba17d74ddab0d') {
+            if (data.userId === userId) {
               setStudyTime(data.studyTime);
             }
           });
@@ -42,7 +44,26 @@ const Timer = () => {
         socket = null; // Reset socket to null after disconnect
       }
     };
-  }, []); // Empty dependency array ensures this runs only once
+  }, [userId]); // Empty dependency array ensures this runs only once
+
+
+  useEffect(() => {
+    // Fetch the previous study time for the user
+    const fetchStudyTime = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/user/${userId}`);
+        if (response.data && response.data.studyTime !== undefined) {
+          setTimeElapsed(response.data.studyTime); // Set the timer to the saved time
+        }
+      } catch (error) {
+        console.error('Error fetching study time:', error);
+      }
+    };
+    if (userId) {
+      fetchStudyTime();
+    }
+  }, [userId]); // Runs once on mount
+  
 
   useEffect(() => {
     let timer;
@@ -52,8 +73,8 @@ const Timer = () => {
         setTimeElapsed((prev) => {
           const newTime = prev + 1;
           // Emit only when the time changes
-          if (socketId) {
-            socket.emit('studyTimeUpdate', { userId: '675d4bc1361ba17d74ddab0d', studyTime: newTime });
+          if (socketId && userId) {
+            socket.emit('studyTimeUpdate', { userId, studyTime: newTime });
           }
           return newTime;
         });
@@ -71,16 +92,16 @@ const Timer = () => {
     setIsRunning(!isRunning); // Toggle the running state
 
     if (!isRunning) {
-      socket?.emit('startTimer', { userId: '675d4bc1361ba17d74ddab0d', timeElapsed }); // Notify server when timer starts
+      socket?.emit('startTimer', { userId, timeElapsed }); // Notify server when timer starts
     } else {
-      socket?.emit('pauseTimer', { userId: '675d4bc1361ba17d74ddab0d', timeElapsed }); // Notify server when timer pauses
+      socket?.emit('pauseTimer', { userId, timeElapsed }); // Notify server when timer pauses
     }
   };
 
   const handleReset = () => {
     setIsRunning(false); // Stop the timer
     setTimeElapsed(0); // Reset the timer to 0
-    socket?.emit('resetTimer', { userId: '675d4bc1361ba17d74ddab0d' }); // Notify server about reset
+    socket?.emit('resetTimer', { userId }); // Notify server about reset
   };
 
   useEffect(() => {
@@ -132,11 +153,11 @@ const Timer = () => {
                 <span className="font-medium">{user.name}</span>
                 <span className="font-medium">{user._id}</span>
                 <span>
-                {Math.floor(studyTime / 60)}:
-                {studyTime % 60 < 10 ? `0${studyTime % 60}` : studyTime % 60}
+                {Math.floor(user.studyTime / 60)}:
+                {user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
                 </span>
               </li>
-            ))}
+            ))}   
           </ul>
         ) : (
           <p>No users found.</p> // Show this if no users are present

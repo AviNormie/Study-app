@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
+// import { io } from 'socket.io-client';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -9,28 +9,28 @@ function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    axios.post('http://localhost:3000/login', { email, password })
-      .then(result => {
-        console.log('Login successful', result);
-        // Redirect to the main page after successful login
+    try {
+      // Make the POST request to the backend
+      const result = await axios.post('http://localhost:3000/login', { email, password });
+
+      // If login is successful, store the userId in localStorage
+      if (result.data.message === 'success') {
+        localStorage.setItem('userId', result.data.userId);
+        console.log('Login successful, userId stored:', result.data.userId);
+        
+        // Redirect to the timer page after successful login
         navigate('/timer');
-
-        // Establish Socket.IO connection after login
-      //   const socket = io('http://localhost:3000');
-      //   socket.emit('user_connected', { userId: result.data.userId });
-
-      //   // You can store socket connection or user data if needed
-      //   socket.on('message', (data) => {
-      //     console.log(data); // Handle incoming messages
-      //   });
-      // })
-      // .catch(error => {
-      //   console.log('Login error:', error);
-      //   setError('Invalid credentials');
-      });
+      } else {
+        // Handle invalid credentials
+        setError('Invalid credentials');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login. Please try again.');
+    }
   };
 
   return (

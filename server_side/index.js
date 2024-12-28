@@ -15,9 +15,10 @@ const io = socketIo(server, {
 });
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://avisrivastava:aviissexy@cluster-main.nd18g.mongodb.net/study-app')
+mongoose.connect('mongodb+srv://avi:avi@cluster0.bjgti.mongodb.net/study-app')
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
+  mongoose.set('debug', true);
 
 // Middleware
 app.use(cors());
@@ -39,7 +40,7 @@ io.on('connection', (socket) => {
 
     // Start the interval if not already running
     if (!timerInterval) {
-      timerInterval = setInterval(updateAllTimers, 10000);
+      timerInterval = setInterval(updateAllTimers, 1000);
     }
 
     const user = await UserModel.findById(data.userId);
@@ -93,7 +94,7 @@ io.on('connection', (socket) => {
     for (const userId of activeUserIds) {
       const user = await UserModel.findById(userId);
       if (user) {
-        user.studyTime += 10; // Increment time by 2 seconds
+        user.studyTime += 1; // Increment time by 2 seconds
         await user.save();
         io.emit('studyTimeUpdate', { userId: user._id, studyTime: user.studyTime });
       }
@@ -137,7 +138,7 @@ app.post('/login', async (req, res) => {
     const user = await UserModel.findOne({ email });
     if (user) {
       if (user.password === password) {
-        res.json({ message: 'success' });
+        res.json({ message: 'success',userId: user._id });
       } else {
         res.json({ message: 'Incorrect password' });
       }
@@ -149,9 +150,23 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.get('/user/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await UserModel.findById(userId);
+    if (user) {
+      return res.status(200).json({ studyTime: user.studyTime });
+    }
+    res.status(404).json({ message: 'User not found' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+
 app.get('/users', async (req, res) => {
   try {
-    const users = await UserModel.find({}, 'name studyTime');
+    const users = await UserModel.find({}, 'name studyTime _id');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users' });
