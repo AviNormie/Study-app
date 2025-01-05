@@ -26,10 +26,12 @@ const Timer = () => {
       });
           // Listen for 'studyTimeUpdate' event from the backend
           socket.on('studyTimeUpdate', (data) => {
-            // console.log('Received update:', data);
-            if (data.userId === userId) {
-              setStudyTime(data.studyTime);
-            }
+            // Update study time for the correct user
+            setUsers((prevUsers) =>
+              prevUsers.map((user) =>
+                user._id === data.userId ? { ...user, studyTime: data.studyTime } : user
+              )
+            );
           });
 
       socket.on('message', (data) => {
@@ -39,9 +41,12 @@ const Timer = () => {
 
     return () => {
       if (socket) {
-        socket.disconnect();
-        console.log('Socket disconnected');
-        socket = null; // Reset socket to null after disconnect
+        socket.on('disconnect', () => {
+          console.log('Socket disconnected');
+          setTimeout(() => {
+            socket.connect();  // Reconnect after a short delay
+          }, 1000);
+        });
       }
     };
   }, [userId]); // Empty dependency array ensures this runs only once
