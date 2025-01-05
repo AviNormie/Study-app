@@ -47,7 +47,7 @@ const Timer = () => {
     const fetchStudyTime = async () => {
       setTimerLoading(true);
       try {
-        const response = await axios.get(`http://localhost:3000/user/${userId}`);
+        const response = await axios.get(`https://study-app-api.onrender.com/user/${userId}`);
         if (response.data && response.data.studyTime !== undefined) {
           setTimeElapsed(response.data.studyTime);
         }
@@ -99,7 +99,7 @@ const Timer = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/users');
+        const response = await axios.get('https://study-app-api.onrender.com/users');
         setUsers(response.data.sort((a, b) => b.studyTime - a.studyTime));
       } catch (error) {
         console.error('Error fetching users:', error);

@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://study-buddy-tawny.vercel.app/',
     methods: ['GET', 'POST'],
   },
 });
@@ -111,7 +111,7 @@ io.on('connection', (socket) => {
 });
 app.get("/", (req, res)=>{
   return res.json({
-    message: "teri ma ki chuu"
+    message: "Backend Deployed"
   })
   })
 app.post('/sign-up', (req, res) => {
