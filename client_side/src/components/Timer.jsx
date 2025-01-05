@@ -19,7 +19,7 @@ const Timer = () => {
   
   useEffect(() => {
     if (!socket) {
-      socket = io('http://localhost:3000');
+      socket = io('https://study-app-api.onrender.com');
 
       socket.on('connect', () => {
         setSocketId(socket.id);
