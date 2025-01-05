@@ -24,21 +24,17 @@ mongoose.connect('mongodb+srv://avi:avi@cluster0.bjgti.mongodb.net/study-app')
 app.use(cors());
 app.use(express.json());
 
-let timerInterval = null; // Global interval for updating timers
-let activeTimers = {}; // To keep track of active timers
+let timerInterval = null; 
+let activeTimers = {}; 
 
-// Socket.IO events
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  // Start the timer
   socket.on('startTimer', async (data) => {
     console.log(`${data.userId} started timer: ${data.timeElapsed}s`);
 
-    // Mark the timer as active for this user
     activeTimers[data.userId] = true;
 
-    // Start the interval if not already running
     if (!timerInterval) {
       timerInterval = setInterval(updateAllTimers, 1000);
     }
@@ -51,14 +47,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Pause the timer
   socket.on('pauseTimer', async (data) => {
     console.log(`${data.userId} paused timer: ${data.timeElapsed}s`);
 
-    // Mark the timer as inactive for this user
     delete activeTimers[data.userId];
 
-    // Stop the interval if no active timers remain
     if (Object.keys(activeTimers).length === 0) {
       clearInterval(timerInterval);
       timerInterval = null;
@@ -72,11 +65,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Reset the timer
   socket.on('resetTimer', async (data) => {
     console.log(`${data.userId} reset timer`);
 
-    // Mark the timer as inactive
     delete activeTimers[data.userId];
 
     const user = await UserModel.findById(data.userId);
@@ -86,32 +77,26 @@ io.on('connection', (socket) => {
       io.emit('studyTimeUpdate', { userId: data.userId, studyTime: user.studyTime });
     }
   });
-
-  // Function to sync study time for all users every 2 seconds
   const updateAllTimers = async () => {
-    // Increment time only for users with active timers
     const activeUserIds = Object.keys(activeTimers);
     for (const userId of activeUserIds) {
       const user = await UserModel.findById(userId);
       if (user) {
-        user.studyTime += 1; // Increment time by 2 seconds
+        user.studyTime += 1; 
         await user.save();
         io.emit('studyTimeUpdate', { userId: user._id, studyTime: user.studyTime });
       }
     }
 
-    // If no active timers remain, clear the interval
     if (activeUserIds.length === 0) {
       clearInterval(timerInterval);
       timerInterval = null;
     }
   };
 
-  // Disconnect logic
   socket.on('disconnect', async () => {
     console.log('User disconnected:', socket.id);
 
-    // Remove the user from activeTimers
     for (const userId in activeTimers) {
       if (activeTimers[userId] === socket.id) {
         delete activeTimers[userId];
@@ -125,7 +110,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// API routes
 app.post('/sign-up', (req, res) => {
   UserModel.create(req.body)
     .then((user) => res.json(user))
@@ -173,6 +157,5 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
