@@ -109,7 +109,11 @@ io.on('connection', (socket) => {
     }
   });
 });
-
+app.get("/", (req, res)=>{
+  return res.json({
+    message: "teri ma ki chuu"
+  })
+  })
 app.post('/sign-up', (req, res) => {
   UserModel.create(req.body)
     .then((user) => res.json(user))
