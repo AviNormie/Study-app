@@ -1,182 +1,207 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { PuffLoader } from "react-spinners";
 
-let socket; // Declare with let for reassignment
+let socket;
 
 const Timer = () => {
-  const [loading, setLoading] = useState(true); // Loader state
+  const [loading, setLoading] = useState(true);
   const [socketId, setSocketId] = useState(null);
-  const [timeElapsed, setTimeElapsed] = useState(0); // Timer starts at 0 seconds
-  const [isRunning, setIsRunning] = useState(false); // Tracks whether the timer is running
-  const [users, setUsers] = useState([]); // List of users with their study times
-  const [studyTime, setStudyTime] = useState(0); // Track studyTime for display
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [users, setUsers] = useState([]);
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
-  const [timerLoading, setTimerLoading] = useState(true);  // Loader for timer
+  const [timerLoading, setTimerLoading] = useState(true);
+  const [userName, setUserName] = useState(localStorage.getItem('userName') || 'User');
 
+  const dotsContainerRef = useRef(null);
+  
   useEffect(() => {
-    // Ensure socket is only initialized once
     if (!socket) {
-      socket = io('http://localhost:3000'); // Connect to the Socket.IO server
+      socket = io('http://localhost:3000');
 
       socket.on('connect', () => {
-        console.log('Socket connected: ', socket.id);
-        setSocketId(socket.id); // Store socket ID
+        setSocketId(socket.id);
       });
-          // Listen for 'studyTimeUpdate' event from the backend
-          socket.on('studyTimeUpdate', (data) => {
-            // Update study time for the correct user
-            setUsers((prevUsers) =>
-              prevUsers.map((user) =>
-                user._id === data.userId ? { ...user, studyTime: data.studyTime } : user
-              )
-            );
-          });
 
-      socket.on('message', (data) => {
-        console.log(data);
+      socket.on('studyTimeUpdate', (data) => {
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user._id === data.userId ? { ...user, studyTime: data.studyTime } : user
+          )
+        );
       });
     }
 
     return () => {
-      if (socket) {
-        socket.on('disconnect', () => {
-          console.log('Socket disconnected');
-          setTimeout(() => {
-            socket.connect();  // Reconnect after a short delay
-          }, 1000);
-        });
-      }
+      socket.on('disconnect', () => {
+        setTimeout(() => {
+          socket.connect();
+        }, 1000);
+      });
     };
-  }, [userId]); // Empty dependency array ensures this runs only once
-
+  }, [userId]);
 
   useEffect(() => {
-    // Fetch the previous study time for the user
     const fetchStudyTime = async () => {
-      setTimerLoading(true);  // Start loading
+      setTimerLoading(true);
       try {
         const response = await axios.get(`http://localhost:3000/user/${userId}`);
         if (response.data && response.data.studyTime !== undefined) {
-          setTimeElapsed(response.data.studyTime); // Set the timer to the saved time
+          setTimeElapsed(response.data.studyTime);
         }
       } catch (error) {
         console.error('Error fetching study time:', error);
-      }
-      finally {
-        setTimerLoading(false);  // Stop loading
+      } finally {
+        setTimerLoading(false);
       }
     };
     if (userId) {
       fetchStudyTime();
     }
-  }, [userId]); // Runs once on mount
-  
+  }, [userId]);
 
   useEffect(() => {
     let timer;
     if (isRunning) {
-      // Timer to increment time every second
       timer = setInterval(() => {
         setTimeElapsed((prev) => {
           const newTime = prev + 1;
-          // Emit only when the time changes
           if (socketId && userId) {
             socket.emit('studyTimeUpdate', { userId, studyTime: newTime });
           }
           return newTime;
         });
-      }, 1000); // Emit every second
+      }, 1000);
     } else {
       clearInterval(timer);
     }
 
-    return () => {
-      clearInterval(timer); // Cleanup interval on unmount
-    };
-  }, [isRunning, socketId]); // Depend only on isRunning and socketId
+    return () => clearInterval(timer);
+  }, [isRunning, socketId]);
 
   const handleStartPause = () => {
-    setIsRunning(!isRunning); // Toggle the running state
-
+    setIsRunning(!isRunning);
     if (!isRunning) {
-      socket?.emit('startTimer', { userId, timeElapsed }); // Notify server when timer starts
+      socket?.emit('startTimer', { userId, timeElapsed });
     } else {
-      socket?.emit('pauseTimer', { userId, timeElapsed }); // Notify server when timer pauses
+      socket?.emit('pauseTimer', { userId, timeElapsed });
     }
   };
 
   const handleReset = () => {
-    setIsRunning(false); // Stop the timer
-    setTimeElapsed(0); // Reset the timer to 0
-    socket?.emit('resetTimer', { userId }); // Notify server about reset
+    setIsRunning(false);
+    setTimeElapsed(0);
+    socket?.emit('resetTimer', { userId });
   };
 
   useEffect(() => {
-    // Fetch users when the component mounts
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/users'); // API to fetch user data
-        setUsers(response.data);
+        const response = await axios.get('http://localhost:3000/users');
+        setUsers(response.data.sort((a, b) => b.studyTime - a.studyTime));
       } catch (error) {
         console.error('Error fetching users:', error);
       } finally {
-        setLoading(false); // Hide loader
+        setLoading(false);
       }
     };
 
     fetchUsers();
-  }, []); // Empty dependency ensures this runs once on mount
+  }, []);
+
+  // Create static dots for the background
+  useEffect(() => {
+    if (dotsContainerRef.current && dotsContainerRef.current.childNodes.length === 0) {
+      for (let i = 0; i < 80; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'absolute rounded-full bg-white animate-blink';
+        dot.style.top = `${Math.random() * 100}%`;
+        dot.style.left = `${Math.random() * 100}%`;
+        dot.style.width = `${Math.random() * 3 + 2}px`;
+        dot.style.height = `${Math.random() * 3 + 2}px`;
+        dot.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        dot.style.animationDelay = `${Math.random() * 5}s`;
+        dotsContainerRef.current.appendChild(dot);
+      }
+    }
+  }, []);
 
   return (
-    <div className="flex flex-col items-center p-4">
-      {socketId && <p>Connected Socket ID: {socketId}</p>}
-      {timerLoading ? (
-        <div className="flex justify-center items-center h-32">
-          <PuffLoader color="#3498db" size={80} />
+    <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-900 overflow-hidden">
+      <div ref={dotsContainerRef} className="absolute inset-0 pointer-events-none"></div>
+
+      <style>
+        {`
+          @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+          }
+          .animate-blink {
+            animation: blink infinite;
+          }
+        `}
+      </style>
+
+      {/* Navbar */}
+      <nav className="absolute top-0 left-0 right-0 z-10 bg-transparent text-white py-4">
+        <div className="container mx-auto flex justify-between items-center px-4">
+          <h1 className="text-3xl font-bold">Let's Study, {userName}!</h1>
+          <p className="text-sm">Socket ID: {socketId || 'Connecting...'}</p>
         </div>
-      ) : (
-        <h1 className="text-4xl font-bold border-2 rounded-md p-2 mb-4">
-          {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
-        </h1>
-      )}
-      <div className="flex space-x-4 mb-4">
-        <button
-          onClick={handleStartPause}
-          className={`px-4 py-2 rounded text-white ${isRunning ? 'bg-red-500 hover:bg-red-700' : 'bg-green-500 hover:bg-green-700'}`}
-        >
-          {isRunning ? 'Pause' : 'Start'}
-        </button>
-        <button
-          onClick={handleReset}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-        >
-          Reset
-        </button>
-      </div>
-      <div className="w-full max-w-lg bg-gray-100 p-4 rounded shadow">
-        <h2 className="text-2xl font-bold mb-4">Users' Study Times</h2>
-        {loading ? (
-         <div className="flex justify-center items-center">
-         <PuffLoader color="#3498db" size={60} />
-       </div> // Show loader when fetching users
-        ) : users.length > 0 ? (
-          <ul className="space-y-2">
-            {users.map((user) => (
-              <li key={user._id} className="flex justify-between bg-white p-2 rounded shadow">
-                <span className="font-medium">{user.name}</span>
-                <span className="font-medium">{user._id}</span>
-                <span>
-                {Math.floor(user.studyTime / 60)}:
-                {user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
-                </span>
-              </li>
-            ))}   
-          </ul>
-        ) : (
-          <p>No users found.</p> // Show this if no users are present
-        )}
+      </nav>
+
+      {/* Main Section */}
+      <div className="container mx-auto flex flex-col md:flex-row items-start justify-between mt-24 p-6 space-y-8 md:space-y-0">
+        
+        {/* Timer Section */}
+        <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-lg bg-opacity-90">
+          <h2 className="text-2xl font-semibold mb-4">Your Timer</h2>
+          {timerLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <PuffLoader color="#8b5cf6" size={100} />
+            </div>
+          ) : (
+            <h1 className="text-6xl font-extrabold text-center border-4 border-blue-500 rounded-md p-4">
+              {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
+            </h1>
+          )}
+
+          <div className="flex justify-center space-x-6 mt-6">
+            <button
+              onClick={handleStartPause}
+              className={`px-6 py-3 rounded-lg text-lg font-medium text-white ${isRunning ? 'bg-red-500' : 'bg-green-500'}`}
+            >
+              {isRunning ? 'Pause' : 'Start'}
+            </button>
+            <button
+              onClick={handleReset}
+              className="px-6 py-3 bg-gray-500 text-white rounded-lg"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        {/* Leaderboard Section */}
+        <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-lg bg-opacity-90">
+          <h2 className="text-2xl font-semibold mb-4">Leaderboard</h2>
+          {loading ? (
+            <PuffLoader color="#8b5cf6" size={80} />
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {users.map((user, index) => (
+                <li key={user._id} className="flex justify-between p-4">
+                  <span>{index + 1}. {user.name}</span>
+                  <span>
+                  {Math.floor(user.studyTime / 60)}:{user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
