@@ -14,7 +14,7 @@ const Timer = () => {
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
   const [timerLoading, setTimerLoading] = useState(true);
   const [userName, setUserName] = useState(localStorage.getItem('userName') || 'User');
-
+  const newUserName=userName.toUpperCase();
   const dotsContainerRef = useRef(null);
   
   useEffect(() => {
@@ -131,7 +131,7 @@ const Timer = () => {
   return (
     <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-900 overflow-hidden">
       <div ref={dotsContainerRef} className="absolute inset-0 pointer-events-none"></div>
-
+  
       <style>
         {`
           @keyframes blink {
@@ -143,31 +143,31 @@ const Timer = () => {
           }
         `}
       </style>
-
+  
       {/* Navbar */}
       <nav className="absolute top-0 left-0 right-0 z-10 bg-transparent text-white py-4">
-        <div className="container mx-auto flex justify-between items-center px-4">
-          <h1 className="text-3xl font-bold">Let's Study, {userName}!</h1>
+        <div className="container mx-auto flex  justify-between items-center px-4">
+          <h1 className="text-4xl font-bold">Let's Study, {newUserName}!</h1>
           <p className="text-sm">Socket ID: {socketId || 'Connecting...'}</p>
         </div>
       </nav>
-
+  
       {/* Main Section */}
-      <div className="container mx-auto flex flex-col md:flex-row items-start justify-between mt-24 p-6 space-y-8 md:space-y-0">
-        
+      <div className="container mx-auto flex flex-col md:flex-row items-center justify-center mt-24 p-6 space-y-8 md:space-y-0">
+  
         {/* Timer Section */}
-        <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-lg bg-opacity-90">
-          <h2 className="text-2xl font-semibold mb-4">Your Timer</h2>
+        <div className="  mr-1  w-full md:w-1/2 bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-lg shadow-lg bg-opacity-80">
+          <h1 className="flex justify-center text-3xl font-semibold mb-4 text-white">Your Timer</h1>
           {timerLoading ? (
             <div className="flex justify-center items-center h-40">
               <PuffLoader color="#8b5cf6" size={100} />
             </div>
           ) : (
-            <h1 className="text-6xl font-extrabold text-center border-4 border-blue-500 rounded-md p-4">
+            <h1 className="text-6xl font-extrabold text-center text-white border-4 border-transparent bg-clip-border bg-gradient-to-l from-purple-800 to-indigo-800 rounded-3xl p-4">
               {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
             </h1>
           )}
-
+  
           <div className="flex justify-center space-x-6 mt-6">
             <button
               onClick={handleStartPause}
@@ -183,19 +183,19 @@ const Timer = () => {
             </button>
           </div>
         </div>
-
+  
         {/* Leaderboard Section */}
-        <div className="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-lg bg-opacity-90">
-          <h2 className="text-2xl font-semibold mb-4">Leaderboard</h2>
+        <div className=" ml-1 w-full md:w-1/2 bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-lg shadow-lg bg-opacity-80">
+          <h1 className="text-3xl flex justify-center font-semibold mb-4 text-white">Leaderboard</h1>
           {loading ? (
             <PuffLoader color="#8b5cf6" size={80} />
           ) : (
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-gray-300">
               {users.map((user, index) => (
                 <li key={user._id} className="flex justify-between p-4">
-                  <span>{index + 1}. {user.name}</span>
-                  <span>
-                  {Math.floor(user.studyTime / 60)}:{user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
+                  <span className="text-white">{index + 1}. {user.name}</span>
+                  <span className="text-white">
+                    {Math.floor(user.studyTime / 60)}:{user.studyTime % 60 < 10 ? `0${user.studyTime % 60}` : user.studyTime % 60}
                   </span>
                 </li>
               ))}
@@ -205,6 +205,7 @@ const Timer = () => {
       </div>
     </div>
   );
+  
 };
 
 export default Timer;
