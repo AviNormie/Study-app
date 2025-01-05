@@ -13,7 +13,7 @@ const Timer = () => {
   const [users, setUsers] = useState([]); // List of users with their study times
   const [studyTime, setStudyTime] = useState(0); // Track studyTime for display
   const [userId, setUserId] = useState(localStorage.getItem('userId'));
-
+  const [timerLoading, setTimerLoading] = useState(true);  // Loader for timer
 
   useEffect(() => {
     // Ensure socket is only initialized once
@@ -55,6 +55,7 @@ const Timer = () => {
   useEffect(() => {
     // Fetch the previous study time for the user
     const fetchStudyTime = async () => {
+      setTimerLoading(true);  // Start loading
       try {
         const response = await axios.get(`http://localhost:3000/user/${userId}`);
         if (response.data && response.data.studyTime !== undefined) {
@@ -62,6 +63,9 @@ const Timer = () => {
         }
       } catch (error) {
         console.error('Error fetching study time:', error);
+      }
+      finally {
+        setTimerLoading(false);  // Stop loading
       }
     };
     if (userId) {
@@ -128,9 +132,15 @@ const Timer = () => {
   return (
     <div className="flex flex-col items-center p-4">
       {socketId && <p>Connected Socket ID: {socketId}</p>}
-      <h1 className="text-4xl font-bold mb-4">
-        {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
-      </h1>
+      {timerLoading ? (
+        <div className="flex justify-center items-center h-32">
+          <PuffLoader color="#3498db" size={80} />
+        </div>
+      ) : (
+        <h1 className="text-4xl font-bold border-2 rounded-md p-2 mb-4">
+          {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
+        </h1>
+      )}
       <div className="flex space-x-4 mb-4">
         <button
           onClick={handleStartPause}

@@ -31,9 +31,11 @@ function MainPage() {
   }, [navigate]);
 
   return (
-    <div>
+    <div className='items-center flex flex-col m-3 border   '>
       <h1>Welcome to the main page! Socket connection established.</h1>
       {socketId && <p>Connected Socket ID: {socketId}</p>}
+      
+      <h2>if not redirected to "/timer" route then add "/timer" to the url on the top</h2>
     </div>
   );
 }
