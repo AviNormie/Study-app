@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'https://study-buddy-tawny.vercel.app/',
+    origin: ["https://study-buddy-tawny.vercel.app", "http://localhost:5173"],
     methods: ['GET', 'POST'],
   },
 });
@@ -21,7 +21,14 @@ mongoose.connect('mongodb+srv://avi:avi@cluster0.bjgti.mongodb.net/study-app')
   mongoose.set('debug', true);
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://study-buddy-tawny.vercel.app", "http://localhost:5173"],
+    methods: ["GET", "POST"],
+    credentials: true
+  })
+);
+
 app.use(express.json());
 
 let timerInterval = null; 
