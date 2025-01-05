@@ -14,7 +14,7 @@ function Login() {
 
     try {
       // Make the POST request to the backend
-      const result = await axios.post('http://localhost:3000/login', { email, password });
+      const result = await axios.post('https://study-app-api.onrender.com/login', { email, password });
 
       // If login is successful, store the userId in localStorage
       if (result.data.message === 'success') {

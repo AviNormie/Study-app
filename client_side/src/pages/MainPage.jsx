@@ -10,7 +10,7 @@ function MainPage() {
 
   useEffect(() => {
     if (!socket) {
-      socket = io('http://localhost:3000'); // Connect to the Socket.IO server
+      socket = io('https://study-app-api.onrender.com'); // Connect to the Socket.IO server
 
       socket.on('connect', () => {
         console.log('Socket connected: ', socket.id);

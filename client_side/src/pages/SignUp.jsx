@@ -12,7 +12,7 @@ const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    axios.post('http://localhost:3000/sign-up',{name,email,password })
+    axios.post('https://study-app-api.onrender.com/sign-up',{name,email,password })
     .then(result => {console.log(result)
       navigate('/login')
     })
