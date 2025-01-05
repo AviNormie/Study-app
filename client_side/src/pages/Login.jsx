@@ -19,6 +19,7 @@ function Login() {
       // If login is successful, store the userId in localStorage
       if (result.data.message === 'success') {
         localStorage.setItem('userId', result.data.userId);
+        localStorage.setItem('userName', result.data.userName);
         console.log('Login successful, userId stored:', result.data.userId);
         
         // Redirect to the timer page after successful login

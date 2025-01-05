@@ -122,7 +122,7 @@ app.post('/login', async (req, res) => {
     const user = await UserModel.findOne({ email });
     if (user) {
       if (user.password === password) {
-        res.json({ message: 'success',userId: user._id });
+        res.json({ message: 'success',userId: user._id ,userName:user.name});
       } else {
         res.json({ message: 'Incorrect password' });
       }
