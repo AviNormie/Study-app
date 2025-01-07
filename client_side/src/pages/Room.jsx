@@ -7,7 +7,7 @@ const Room = () => {
   const [peers, setPeers] = useState({});
   const userVideo = useRef();
   const peerConnections = useRef({});
-  
+
   useEffect(() => {
     socket.emit('joinRoom', 'study-room');
 
@@ -88,16 +88,46 @@ const Room = () => {
       socket.emit('answer', { target: caller, sdp: answer });
     });
 
+    peer.ontrack = (event) => {
+      setPeers((prev) => ({
+        ...prev,
+        [caller]: {
+          stream: event.streams[0],
+          socketId: caller,
+        }
+      }));
+    };
+
     peerConnections.current[caller] = peer;
   };
 
   return (
     <div className="h-screen flex flex-col items-center justify-center">
-        <div className='z-10'>
-
+      <div className="z-10">
         <h1 className="text-3xl mb-4">Live Study Room</h1>
-        </div>
-      <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-3/4" />
+      </div>
+      
+      {/* Display the local user's video with smaller size */}
+      <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-1/4 mb-4" />
+      
+      {/* Render the videos of all peers with smaller size */}
+      <div className="flex flex-wrap justify-center space-x-4">
+        {Object.keys(peers).map(socketId => (
+          <div key={socketId} className="mb-4">
+            <h3 className="text-white">{`User ${socketId}`}</h3>
+            <video 
+              autoPlay 
+              muted={false} 
+              ref={(videoElement) => {
+                if (videoElement) {
+                  videoElement.srcObject = peers[socketId].stream;
+                }
+              }} 
+              className="rounded-lg shadow-lg w-1/4"
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
