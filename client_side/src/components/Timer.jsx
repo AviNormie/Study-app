@@ -188,7 +188,9 @@ const Timer = () => {
         <div className="ml-1 w-full md:w-1/2 bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-lg shadow-lg bg-opacity-80">
         <h1 className="text-3xl flex justify-center font-semibold mb-4 text-white">Leaderboard</h1>
         {loading ? (
-          <PuffLoader color="#8b5cf6" size={80} />
+          <div className="flex justify-center items-center h-40">
+          <PuffLoader color="#8b5cf6" size={100} />
+        </div>
         ) : (
           <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-transparent">
             <ul className="divide-y divide-gray-300">

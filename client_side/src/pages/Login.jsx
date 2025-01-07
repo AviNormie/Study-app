@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// import { io } from 'socket.io-client';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Track loading state
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true); // Set loading to true when login starts
 
     try {
       // Make the POST request to the backend
@@ -31,34 +32,50 @@ function Login() {
     } catch (error) {
       console.error('Login error:', error);
       setError('An error occurred during login. Please try again.');
+    } finally {
+      setLoading(false); // Set loading to false after request completes
     }
   };
 
   return (
-    <div className="flex h-screen justify-center items-center">
+    <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-950 overflow-hidden flex justify-center items-center">
       <form onSubmit={handleLogin} method="post">
-        <div className="flex flex-col shadow-2xl bg-slate-50 gap-2 border-[2px] border-coral-red pt-32 pb-32 pl-24 pr-24 rounded-lg">
-          <h1 className="font-bold text-coral-red text-3xl">Enter your details to Login</h1>
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex border-[3px] bg-slate-100 border-coral-red rounded-sm p-3 w-full"
-            type="email"
-            placeholder="E-mail"
-            name="email"
-          />
-          <input
-            onChange={(e) => setPassword(e.target.value)}
-            className="flex border-[3px] bg-slate-100 border-coral-red rounded-sm p-3 w-full"
-            type="password"
-            placeholder="Password"
-            name="password"
-          />
-          <button type="submit" className="border bg-green-500 text p-2 font-bold text-xl">
-            Login
-          </button>
+        <div className="w-96 h-96 bg-indigo-50 rounded-lg shadow-xl flex flex-col justify-between p-6">
+          <h1 className="font-bold text-indigo-500 text-3xl text-center mb-6">Welcome again!</h1>
+          <fieldset className="border-4 border-dotted border-indigo-500 p-5">
+            <legend className="px-2 italic -mx-2 text-indigo-500">Enter your details to login</legend>
+            <label className="text-xs font-bold after:content-['*'] after:text-red-400" htmlFor="email">Mail</label>
+            <input
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 mb-2 mt-1 outline-none ring-none focus:ring-2 focus:ring-indigo-500"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="E-mail"
+              required
+            />
+            <label className="text-xs font-bold after:content-['*'] after:text-red-400" htmlFor="password">Password</label>
+            <input
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mb-2 mt-1 outline-none ring-none focus:ring-2 focus:ring-indigo-500"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full rounded bg-indigo-500 text-indigo-50 p-2 font-bold hover:bg-indigo-400"
+              disabled={loading} // Disable button while loading
+            >
+              {loading ? 'Logging in...' : 'Log In'}
+            </button>
+          </fieldset>
         </div>
       </form>
-      {error && <div>{error}</div>}
+
+      {error && <div className="text-center ml-2 border-2 p-2 rounded-sm text-white mt-4">{error}</div>}
     </div>
   );
 }
