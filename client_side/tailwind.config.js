@@ -1,3 +1,6 @@
+// tailwind.config.js (ESM Compatible)
+import tailwindScrollbar from 'tailwind-scrollbar';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -8,6 +11,6 @@ export default {
     extend: {},
   },
   plugins: [
-    require('tailwind-scrollbar')({ nocompatible: true }),
+    tailwindScrollbar({ nocompatible: true }),
   ],
 }
