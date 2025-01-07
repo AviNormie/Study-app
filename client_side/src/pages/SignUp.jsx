@@ -6,6 +6,8 @@ function SignUp() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const dotsContainerRef = useRef(null); // Reference for dots container
   const navigate = useNavigate();
 
@@ -33,12 +35,20 @@ function SignUp() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     axios.post('https://study-app-api.onrender.com/sign-up', { name, email, password })
       .then(result => {
         console.log(result);
+        setLoading(false);
         navigate('/login');
       })
-      .catch(error => console.log(error));
+      .catch(error => {
+        setLoading(false);
+        setError('Something went wrong! Please try again.');
+        console.log(error);
+      });
   };
 
   return (
@@ -47,40 +57,52 @@ function SignUp() {
       <div ref={dotsContainerRef} className="absolute inset-0 pointer-events-none"></div>
 
       <form onSubmit={handleSubmit} method="post">
-        <div className="flex flex-col shadow-2xl bg-slate-50 gap-2 border-[2px] border-coral-red pt-32 pb-32 pl-24 pr-24 rounded-lg">
-          <h1 className="font-bold text-coral-red text-3xl text-center">Enter your details to Sign Up</h1>
-          <input
-            onChange={(e) => setName(e.target.value)}
-            className="flex border-[3px] bg-slate-100 border-coral-red rounded-sm p-3 w-full"
-            type="text"
-            placeholder="Name"
-            name="name"
-            required
-          />
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex border-[3px] bg-slate-100 border-coral-red rounded-sm p-3 w-full"
-            type="email"
-            placeholder="E-mail"
-            name="email"
-            required
-          />
-          <input
-            onChange={(e) => setPassword(e.target.value)}
-            className="flex border-[3px] bg-slate-100 border-coral-red rounded-sm p-3 w-full"
-            type="password"
-            placeholder="Password"
-            name="password"
-            required
-          />
-          <button
-            type="submit"
-            className="border bg-green-500 text p-2 font-bold text-xl hover:bg-green-600"
-          >
-            Sign Up
-          </button>
+        <div className="w-96 h-auto bg-indigo-50 rounded-lg shadow-xl flex flex-col justify-between p-6">
+          <h1 className="font-bold text-indigo-500 text-3xl text-center mb-6">Sign Up</h1>
+          <fieldset className="border-4 border-dotted border-indigo-500 p-5">
+            <legend className="px-2 italic -mx-2 text-indigo-500">Enter your details to sign up</legend>
+            <label className="text-xs font-bold after:content-['*'] after:text-red-400" htmlFor="name">Name</label>
+            <input
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-2 mb-2 mt-1 outline-none ring-none focus:ring-2 focus:ring-indigo-500"
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Name"
+              required
+            />
+            <label className="text-xs font-bold after:content-['*'] after:text-red-400" htmlFor="email">Mail</label>
+            <input
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 mb-2 mt-1 outline-none ring-none focus:ring-2 focus:ring-indigo-500"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="E-mail"
+              required
+            />
+            <label className="text-xs font-bold after:content-['*'] after:text-red-400" htmlFor="password">Password</label>
+            <input
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 mb-2 mt-1 outline-none ring-none focus:ring-2 focus:ring-indigo-500"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Password"
+              required
+            />
+            <button
+              type="submit"
+              className="w-full rounded bg-indigo-500 text-indigo-50 p-2 font-bold hover:bg-indigo-400"
+              disabled={loading}
+            >
+              {loading ? 'Signing up...' : 'Sign Up'}
+            </button>
+          </fieldset>
         </div>
       </form>
+
+      {error && <div className="text-center ml-2 border-2 p-2 rounded-sm text-white mt-4">{error}</div>}
 
       <style>
         {`
