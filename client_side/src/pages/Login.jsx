@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,7 +7,30 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false); // Track loading state
+  const dotsContainerRef = useRef(null); // Reference for dots container
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const numDots = 80;
+    const container = dotsContainerRef.current;
+    const dots = [];
+
+    // Create and add dots to the container
+    for (let i = 0; i < numDots; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'absolute w-2 h-2 bg-white rounded-full animate-blink';
+      dot.style.left = `${Math.random() * 100}vw`;
+      dot.style.top = `${Math.random() * 100}vh`;
+      dot.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      container.appendChild(dot);
+      dots.push(dot);
+    }
+
+    // Cleanup dots on component unmount
+    return () => {
+      dots.forEach(dot => dot.remove());
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,7 +45,7 @@ function Login() {
         localStorage.setItem('userId', result.data.userId);
         localStorage.setItem('userName', result.data.userName);
         console.log('Login successful, userId stored:', result.data.userId);
-        
+
         // Redirect to the timer page after successful login
         navigate('/timer');
       } else {
@@ -39,6 +62,9 @@ function Login() {
 
   return (
     <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-950 overflow-hidden flex justify-center items-center">
+      {/* Background Blinking Dots */}
+      <div ref={dotsContainerRef} className="absolute inset-0 pointer-events-none"></div>
+
       <form onSubmit={handleLogin} method="post">
         <div className="w-96 h-96 bg-indigo-50 rounded-lg shadow-xl flex flex-col justify-between p-6">
           <h1 className="font-bold text-indigo-500 text-3xl text-center mb-6">Welcome again!</h1>
@@ -76,6 +102,18 @@ function Login() {
       </form>
 
       {error && <div className="text-center ml-2 border-2 p-2 rounded-sm text-white mt-4">{error}</div>}
+
+      <style>
+        {`
+          @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+          }
+          .animate-blink {
+            animation: blink infinite;
+          }
+        `}
+      </style>
     </div>
   );
 }
