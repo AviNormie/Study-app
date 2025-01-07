@@ -102,19 +102,23 @@ const Room = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center">
-      <div className="z-10">
-        <h1 className="text-3xl mb-4">Live Study Room</h1>
+    <div className="h-screen flex flex-col items-center justify-center bg-gray-900">
+      <div className="z-10 text-center mb-6">
+        <h1 className="text-4xl font-semibold text-white">Live Study Room</h1>
+        <p className="text-lg text-gray-300">Collaborate with others in real-time!</p>
       </div>
       
       {/* Display the local user's video with smaller size */}
-      <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-1/4 mb-4" />
+      <div className="mb-6">
+        <h3 className="text-white text-lg mb-2">You</h3>
+        <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-1/3" />
+      </div>
       
-      {/* Render the videos of all peers with smaller size */}
-      <div className="flex flex-wrap justify-center space-x-4">
+      {/* Render the videos of all peers in a responsive grid layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
         {Object.keys(peers).map(socketId => (
-          <div key={socketId} className="mb-4">
-            <h3 className="text-white">{`User ${socketId}`}</h3>
+          <div key={socketId} className="text-center">
+            <h3 className="text-white text-lg mb-2">{`User ${socketId}`}</h3>
             <video 
               autoPlay 
               muted={false} 
@@ -123,7 +127,7 @@ const Room = () => {
                   videoElement.srcObject = peers[socketId].stream;
                 }
               }} 
-              className="rounded-lg shadow-lg w-1/4"
+              className="rounded-lg shadow-lg w-full max-w-xs mx-auto"
             />
           </div>
         ))}
