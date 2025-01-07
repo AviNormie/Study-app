@@ -5,8 +5,11 @@ const socket = io('https://study-app-api.onrender.com');
 
 const Room = () => {
   const [peers, setPeers] = useState({});
+  const [isMuted, setIsMuted] = useState(true); // Mute state for audio
+  const [isVideoOff, setIsVideoOff] = useState(true); // Mute state for video
   const userVideo = useRef();
   const peerConnections = useRef({});
+  const userStream = useRef();
 
   useEffect(() => {
     socket.emit('joinRoom', 'study-room');
@@ -15,6 +18,7 @@ const Room = () => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
         userVideo.current.srcObject = stream;
+        userStream.current = stream;
 
         socket.on('userJoined', ({ socketId }) => {
           console.log(`User joined: ${socketId}`);
@@ -66,6 +70,16 @@ const Room = () => {
       socket.emit('offer', { target, sdp: offer });
     });
     
+    peer.ontrack = (event) => {
+      setPeers((prev) => ({
+        ...prev,
+        [target]: {
+          stream: event.streams[0],
+          socketId: target,
+        }
+      }));
+    };
+
     peerConnections.current[target] = peer;
   };
 
@@ -101,6 +115,22 @@ const Room = () => {
     peerConnections.current[caller] = peer;
   };
 
+  const toggleAudio = () => {
+    const audioTrack = userStream.current.getAudioTracks()[0];
+    if (audioTrack) {
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsMuted(!audioTrack.enabled);
+    }
+  };
+
+  const toggleVideo = () => {
+    const videoTrack = userStream.current.getVideoTracks()[0];
+    if (videoTrack) {
+      videoTrack.enabled = !videoTrack.enabled;
+      setIsVideoOff(!videoTrack.enabled);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gray-900">
       <div className="z-10 text-center mb-6">
@@ -114,6 +144,22 @@ const Room = () => {
         <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-1/3" />
       </div>
       
+      {/* Controls for mute/unmute */}
+      <div className="flex mb-6">
+        <button
+          onClick={toggleAudio}
+          className="bg-blue-500 text-white px-4 py-2 rounded mr-4"
+        >
+          {isMuted ? 'Unmute Audio' : 'Mute Audio'}
+        </button>
+        <button
+          onClick={toggleVideo}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          {isVideoOff ? 'Turn On Video' : 'Turn Off Video'}
+        </button>
+      </div>
+
       {/* Render the videos of all peers in a responsive grid layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
         {Object.keys(peers).map(socketId => (
