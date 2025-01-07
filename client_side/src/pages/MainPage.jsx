@@ -36,7 +36,7 @@ function MainPage() {
       {socketId && <p>Connected Socket ID: {socketId}</p>}
       
       <h2>if not redirected to "/timer" route then add "/timer" to the url on the top</h2>
-      <button onClick={navigate('/timer')}>Click here</button>
+      {/* <button onClick={navigate('/timer')}>Click here</button> */}
     </div>
   );
 }

@@ -129,7 +129,7 @@ const Timer = () => {
   }, []);
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-900 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-b from-black to-purple-950 overflow-hidden">
       <div ref={dotsContainerRef} className="absolute inset-0 pointer-events-none"></div>
   
       <style>
@@ -163,7 +163,7 @@ const Timer = () => {
               <PuffLoader color="#8b5cf6" size={100} />
             </div>
           ) : (
-            <h1 className="text-6xl font-extrabold text-center text-white border-4 border-transparent bg-clip-border bg-gradient-to-l from-purple-800 to-indigo-800 rounded-3xl p-4">
+            <h1 className="text-6xl font-extrabold text-center text-white p-4">
               {Math.floor(timeElapsed / 60)}:{timeElapsed % 60 < 10 ? `0${timeElapsed % 60}` : timeElapsed % 60}
             </h1>
           )}
