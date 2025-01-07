@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { PuffLoader } from "react-spinners";
-
+import {useNavigate} from 'react-router-dom'
 let socket;
 
 const Timer = () => {
@@ -16,7 +16,7 @@ const Timer = () => {
   const [userName, setUserName] = useState(localStorage.getItem('userName') || 'User');
   const newUserName=userName.toUpperCase();
   const dotsContainerRef = useRef(null);
-  
+  const navigate=useNavigate()
   useEffect(() => {
     if (!socket) {
       socket = io('https://study-app-api.onrender.com');
@@ -206,6 +206,11 @@ const Timer = () => {
           </div>
           )}
         </div>
+      </div>
+      <div onClick={()=>navigate('/room')} className='flex justify-center'>
+        <button className='text-white border-2 p-2  '>
+          click me to join the room
+        </button>
       </div>
     </div>
   );

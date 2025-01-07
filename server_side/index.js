@@ -36,7 +36,39 @@ let activeTimers = {};
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
+   // Broadcasting user's connection to others
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room: ${roomId}`);
+    socket.to(roomId).emit('userJoined', { socketId: socket.id });
+  });
 
+  // Handle receiving and forwarding offer (WebRTC signaling)
+  socket.on('offer', (data) => {
+    console.log(`Sending offer from ${socket.id} to ${data.target}`);
+    socket.to(data.target).emit('offer', {
+      sdp: data.sdp,
+      caller: socket.id,
+    });
+  });
+
+  // Handle answering offer (WebRTC signaling)
+  socket.on('answer', (data) => {
+    console.log(`Sending answer from ${socket.id} to ${data.target}`);
+    socket.to(data.target).emit('answer', {
+      sdp: data.sdp,
+      answerer: socket.id,
+    });
+  });
+
+  // Handle ICE candidate exchange
+  socket.on('ice-candidate', (data) => {
+    console.log(`Exchanging ICE candidate from ${socket.id} to ${data.target}`);
+    socket.to(data.target).emit('ice-candidate', {
+      candidate: data.candidate,
+      sender: socket.id,
+    });
+  });
   socket.on('startTimer', async (data) => {
     console.log(`${data.userId} started timer: ${data.timeElapsed}s`);
 

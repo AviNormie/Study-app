@@ -6,6 +6,7 @@ import Timer from './components/Timer';
 import SignUp from './pages/SignUp';
 import MainPage from './pages/MainPage';
 import Login from './pages/Login';
+import Room from './pages/Room';
 function App() {
   return (
     <div>
@@ -15,6 +16,7 @@ function App() {
           <Route path="/timer" element={<Timer />} />
           <Route path="/signup" element={<SignUp/>} />
           <Route path="/login" element={<Login/>} />
+          <Route path="/room" element={<Room/>} />
         </Routes>
       </BrowserRouter>
     </div>
