@@ -43,7 +43,7 @@ function MainPage() {
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-screen">
         <div className="text-center -mt-32"> {/* Adjust the -mt-32 to move it up */}
-          <h1 className="text-5xl font-bold text-white mb-4">
+          <h1 className="text-2xl sm:text-5xl font-bold text-white mb-4">
             Welcome to STUDY-BUDDY !
           </h1>
 

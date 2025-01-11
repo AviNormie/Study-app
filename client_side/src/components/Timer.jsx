@@ -209,7 +209,7 @@ const Timer = () => {
       </div>
       <div onClick={()=>navigate('/room')} className='flex justify-center'>
         <button className='text-white border-2 p-2  '>
-          click me to join the room
+          click me to join the STUDY-JAM
         </button>
       </div>
     </div>
