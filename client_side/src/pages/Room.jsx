@@ -76,6 +76,7 @@ const Room = () => {
 
     // Handle remote tracks
     peer.ontrack = (event) => {
+      console.log('Received remote track', event);
       setPeers(prev => ({
         ...prev,
         [target]: {
