@@ -14,7 +14,6 @@ const io = socketIo(server, {
   },
 });
 
-// MongoDB connection
 mongoose.connect('mongodb+srv://avi:avi@cluster0.bjgti.mongodb.net/study-app')
   .then(() => console.log('MongoDB connected successfully'))
   .catch((err) => console.error('MongoDB connection error:', err));
@@ -42,6 +41,15 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.id} joined room: ${roomId}`);
     socket.to(roomId).emit('userJoined', { socketId: socket.id });
   });
+  // Handle leaving room
+  socket.on('leaveRoom', (roomId) => {
+    console.log(`User ${socket.id} left room: ${roomId}`);
+    socket.leave(roomId);
+
+    // Notify other users in the room that this user left
+    socket.to(roomId).emit('userDisconnected', socket.id);
+});
+
 
   // Handle receiving and forwarding offer (WebRTC signaling)
   socket.on('offer', (data) => {

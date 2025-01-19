@@ -1,17 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import io from 'socket.io-client';
-
+import { useNavigate } from 'react-router-dom'
 const socket = io('https://study-app-api.onrender.com');
-
 const Room = () => {
   const [peers, setPeers] = useState({});
   const userVideo = useRef();
   const peerConnections = useRef({});
   const userStream = useRef();
-
+  const navigate = useNavigate();
   useEffect(() => {
     socket.emit('joinRoom', 'study-room');
-
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
@@ -55,16 +53,23 @@ const Room = () => {
           }
         });
       });
+
+    return () => {
+      // Clean up streams and peer connections
+      if (userStream.current) {
+        userStream.current.getTracks().forEach(track => track.stop());
+      }
+      Object.values(peerConnections.current).forEach(peer => peer.close());
+      peerConnections.current = {};
+    };
   }, []);
 
   const createOffer = (target, stream) => {
     const peer = new RTCPeerConnection();
     peerConnections.current[target] = peer;
 
-    // Add tracks to peer
     stream.getTracks().forEach(track => peer.addTrack(track, stream));
 
-    // Handle ICE candidates
     peer.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit('ice-candidate', {
@@ -74,9 +79,7 @@ const Room = () => {
       }
     };
 
-    // Handle remote tracks
     peer.ontrack = (event) => {
-      console.log('Received remote track', event);
       setPeers(prev => ({
         ...prev,
         [target]: {
@@ -86,7 +89,6 @@ const Room = () => {
       }));
     };
 
-    // Create and send offer
     peer.createOffer().then(offer => {
       peer.setLocalDescription(offer);
       socket.emit('offer', { target, sdp: offer });
@@ -97,10 +99,8 @@ const Room = () => {
     const peer = new RTCPeerConnection();
     peerConnections.current[caller] = peer;
 
-    // Add tracks to peer
     stream.getTracks().forEach(track => peer.addTrack(track, stream));
 
-    // Handle ICE candidates
     peer.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit('ice-candidate', {
@@ -110,14 +110,12 @@ const Room = () => {
       }
     };
 
-    // Set remote description and create answer
     peer.setRemoteDescription(new RTCSessionDescription(sdp));
     peer.createAnswer().then(answer => {
       peer.setLocalDescription(answer);
       socket.emit('answer', { target: caller, sdp: answer });
     });
 
-    // Handle remote tracks
     peer.ontrack = (event) => {
       setPeers(prev => ({
         ...prev,
@@ -129,6 +127,18 @@ const Room = () => {
     };
   };
 
+  const leaveRoom = () => {
+    // Notify the server and clean up local peer connections
+    socket.emit('leaveRoom', 'study-room');
+    if (userStream.current) {
+      userStream.current.getTracks().forEach(track => track.stop());
+    }
+    Object.values(peerConnections.current).forEach(peer => peer.close());
+    peerConnections.current = {};
+    setPeers({});
+    navigate('/timer')
+  };
+
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gray-900">
       <div className="z-10 text-center mb-6">
@@ -136,13 +146,11 @@ const Room = () => {
         <p className="text-lg text-gray-300">Collaborate with others in real-time!</p>
       </div>
 
-      {/* Display the local user's video */}
       <div className="mb-6">
         <h3 className="text-white text-lg mb-2">You</h3>
         <video ref={userVideo} autoPlay muted className="rounded-lg shadow-lg w-1/3" />
       </div>
 
-      {/* Render peers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
         {Object.keys(peers).map(socketId => (
           <div key={socketId} className="text-center">
@@ -159,6 +167,13 @@ const Room = () => {
           </div>
         ))}
       </div>
+
+      <button
+        onClick={leaveRoom}
+        className="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700"
+      >
+        Leave Room
+      </button>
     </div>
   );
 };
