@@ -148,7 +148,7 @@ const Timer = () => {
       <nav className="absolute top-0 left-0 right-0 z-10 bg-transparent text-white py-4">
         <div className="container mx-auto flex  justify-between items-center px-4">
           <h1 className="text-4xl font-bold">Let's Study, {newUserName}!</h1>
-          <p className="text-sm">Socket ID: {socketId || 'Connecting...'}</p>
+          <p className="text-sm hidden md:block">Socket ID: {socketId || 'Connecting...'}</p>
         </div>
       </nav>
   
@@ -185,7 +185,7 @@ const Timer = () => {
         </div>
   
         {/* Leaderboard Section */}
-        <div className="ml-1 w-full md:w-1/2 bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-lg shadow-lg bg-opacity-80">
+        <div className="ml-1 w-full md:w-1/2 bg-gradient-to-r from-purple-800 to-indigo-800 p-8 rounded-lg shadow-md bg-opacity-80">
         <h1 className="text-3xl flex justify-center font-semibold mb-4 text-white">Leaderboard</h1>
         {loading ? (
           <div className="flex justify-center items-center h-40">
@@ -207,9 +207,10 @@ const Timer = () => {
           )}
         </div>
       </div>
-      <div onClick={()=>navigate('/room')} className='flex justify-center'>
-        <button className='text-white border-2 p-2  '>
-          click me to join the STUDY-JAM
+      <div onClick={() => navigate('/room')} className="flex justify-center mt- mb-5">
+        <button className="relative inline-block px-10 py-3 text-lg font-semibold text-white transition-all duration-500 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg shadow-lg hover:shadow-2xl hover:from-pink-600 hover:to-indigo-600 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
+          Click Me to Join the <span className="font-bold">STUDY-JAM</span>
+          <span className="absolute -inset-1 rounded-lg blur-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 opacity-50"></span>
         </button>
       </div>
     </div>

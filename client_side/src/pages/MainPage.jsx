@@ -43,8 +43,8 @@ function MainPage() {
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-screen">
         <div className="text-center -mt-32"> {/* Adjust the -mt-32 to move it up */}
-          <h1 className="text-2xl sm:text-5xl font-bold text-white mb-4">
-            Welcome to STUDY-BUDDY !
+          <h1 className="text-2xl sm:text-5xl font-bold text-white/90  mb-4">
+            Welcome to StudySync !
           </h1>
 
           <div className="flex flex-col sm:flex-row justify-between w-full mt-14 px-6 sm:px-16 gap-6 sm:gap-10">
