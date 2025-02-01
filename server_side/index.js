@@ -22,7 +22,7 @@ mongoose.connect('mongodb+srv://avi:avi@cluster0.bjgti.mongodb.net/study-app')
 // Middleware
 app.use(
   cors({
-    origin: ["https://study-buddy-tawny.vercel.app", "http://localhost:5173"],
+    origin: ["https://study-buddy-tawny.vercel.app","https://studysync-pied.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST"],
     credentials: true
   })
